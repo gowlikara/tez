@@ -24,9 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.google.common.base.Stopwatch;
-
 import org.apache.commons.io.IOUtils;
+import org.apache.tez.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -187,7 +186,7 @@ public class RPCLoadGen extends TezExampleBase {
 
     @Override
     public void run() throws Exception {
-      Stopwatch sw = new Stopwatch().start();
+      StopWatch sw = new StopWatch().start();
       long sleepTime = random.nextInt(sleepTimeMax);
       if (modeByte == VIA_RPC_BYTE) {
         LOG.info("Received via RPC.");
@@ -204,7 +203,7 @@ public class RPCLoadGen extends TezExampleBase {
       } else {
         throw new IllegalArgumentException("Unknown execution mode: [" + modeByte + "]");
       }
-      LOG.info("TimeTakenToAccessPayload=" + sw.stop().elapsedMillis());
+      LOG.info("TimeTakenToAccessPayload=" + sw.stop().now());
       LOG.info("Sleeping for: " + sleepTime);
       Thread.sleep(sleepTime);
     }
