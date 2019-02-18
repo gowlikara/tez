@@ -18,7 +18,6 @@
 
 package org.apache.tez.dag.api.client;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Collections;
@@ -27,19 +26,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
+import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
-
-import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.tez.client.FrameworkClient;
 import org.apache.tez.common.counters.TezCounters;
@@ -49,6 +44,11 @@ import org.apache.tez.dag.api.TezException;
 import org.apache.tez.dag.api.TezUncheckedException;
 import org.apache.tez.dag.api.client.rpc.DAGClientRPCImpl;
 import org.apache.tez.dag.api.records.DAGProtos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 @Private
 public class DAGClientImpl extends DAGClient {
@@ -243,11 +243,11 @@ public class DAGClientImpl extends DAGClient {
         if (dagStatus.isCompleted()) {
           return dagStatus;
         }
-      } catch (ApplicationNotFoundException e) {
-        LOG.info("Failed to fetch DAG data for completed DAG from YARN Timeline"
-            + " - Application not found by YARN", e);
       } catch (TezException e) {
-        if (LOG.isDebugEnabled()) {
+        if (e.getCause() instanceof ApplicationNotFoundException) {
+          LOG.info("Failed to fetch DAG data for completed DAG from YARN Timeline"
+                  + " - Application not found by YARN", e);
+        } else if (LOG.isDebugEnabled()) {
           LOG.info("DAGStatus fetch failed." + e.getMessage());
         }
       }
@@ -297,11 +297,12 @@ public class DAGClientImpl extends DAGClient {
         if (vertexCompletionStates.contains(vertexStatus.getState())) {
           return vertexStatus;
         }
-      } catch (ApplicationNotFoundException e) {
-        LOG.info("Failed to fetch Vertex data for completed DAG from YARN Timeline"
-            + " - Application not found by YARN", e);
-        return null;
       } catch (TezException e) {
+        if (e.getCause() instanceof ApplicationNotFoundException) {
+          LOG.info("Failed to fetch Vertex data for completed DAG from YARN Timeline"
+                  + " - Application not found by YARN", e);
+          return null;
+        }
         if (LOG.isDebugEnabled()) {
           LOG.debug("ERROR fetching vertex data from Yarn Timeline. " + e.getMessage());
         }
@@ -372,11 +373,12 @@ public class DAGClientImpl extends DAGClient {
     } catch (DAGNotRunningException e) {
       LOG.info("DAG is no longer running", e);
       dagCompleted = true;
-    } catch (ApplicationNotFoundException e) {
-      LOG.info("DAG is no longer running - application not found by YARN", e);
-      dagCompleted = true;
     } catch (TezException e) {
       // can be either due to a n/w issue of due to AM completed.
+      if (e.getCause() instanceof ApplicationNotFoundException) {
+        LOG.info("DAG is no longer running - application not found by YARN", e);
+        dagCompleted = true;
+      }
     } catch (IOException e) {
       // can be either due to a n/w issue of due to AM completed.
     }
@@ -396,11 +398,12 @@ public class DAGClientImpl extends DAGClient {
     } catch (DAGNotRunningException e) {
       LOG.info("DAG is no longer running", e);
       dagCompleted = true;
-    } catch (ApplicationNotFoundException e) {
-      LOG.info("DAG is no longer running - application not found by YARN", e);
-      dagCompleted = true;
     } catch (TezException e) {
       // can be either due to a n/w issue of due to AM completed.
+      if (e.getCause() instanceof ApplicationNotFoundException) {
+        LOG.info("DAG is no longer running - application not found by YARN", e);
+        dagCompleted = true;
+      }
     } catch (IOException e) {
       // can be either due to a n/w issue of due to AM completed.
     }

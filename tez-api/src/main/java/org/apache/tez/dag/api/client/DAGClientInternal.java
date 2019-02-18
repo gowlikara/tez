@@ -18,7 +18,6 @@
 
 package org.apache.tez.dag.api.client;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
@@ -26,7 +25,6 @@ import javax.annotation.Nullable;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
-import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException;
 import org.apache.tez.dag.api.TezException;
 
 /**
@@ -34,7 +32,7 @@ import org.apache.tez.dag.api.TezException;
  * Application Master.
  */
 @Private
-public abstract class DAGClientInternal implements Closeable {
+public abstract class DAGClientInternal extends DAGClient {
 
   /**
    * Gets DAG execution context for use with logging
@@ -57,7 +55,7 @@ public abstract class DAGClientInternal implements Closeable {
    *                      specified options. To retrieve basic information, this can be null
    */
   public abstract DAGStatus getDAGStatus(@Nullable Set<StatusGetOpts> statusOptions)
-      throws IOException, TezException, ApplicationNotFoundException;
+      throws IOException, TezException;
 
   /**
    * Get the status of the specified DAG when it reaches a final state, or the timeout expires.
@@ -72,7 +70,7 @@ public abstract class DAGClientInternal implements Closeable {
    */
   public abstract DAGStatus getDAGStatus(@Nullable Set<StatusGetOpts> statusOptions,
       long timeout)
-      throws IOException, TezException, ApplicationNotFoundException;
+      throws IOException, TezException;
 
   /**
    * Get the status of a Vertex of a DAG
@@ -81,7 +79,7 @@ public abstract class DAGClientInternal implements Closeable {
    */
   public abstract VertexStatus getVertexStatus(String vertexName,
       Set<StatusGetOpts> statusOptions)
-    throws IOException, TezException, ApplicationNotFoundException;
+    throws IOException, TezException;
 
   /**
    * Get the dag identifier for the currently executing dag. This is a string
@@ -104,24 +102,24 @@ public abstract class DAGClientInternal implements Closeable {
 
   /**
    * Wait for DAG to complete without printing any vertex statuses
-   * 
+   *
    * @return Final DAG Status
    * @throws IOException
    * @throws TezException
-   * @throws InterruptedException 
+   * @throws InterruptedException
    */
   public abstract DAGStatus waitForCompletion() throws IOException, TezException, InterruptedException;
 
   /**
    * Wait for DAG to complete and periodically print *all* vertices' status.
-   * 
+   *
    * @param statusGetOpts
    *          : status get options. For example, to get counter pass
    *          <code>EnumSet.of(StatusGetOpts.GET_COUNTERS)</code>
    * @return Final DAG Status
    * @throws IOException
    * @throws TezException
-   * @throws InterruptedException 
+   * @throws InterruptedException
    */
   public abstract DAGStatus waitForCompletionWithStatusUpdates(@Nullable Set<StatusGetOpts> statusGetOpts)
       throws IOException, TezException, InterruptedException;
